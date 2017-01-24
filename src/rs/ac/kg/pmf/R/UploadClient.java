@@ -24,11 +24,11 @@ public class UploadClient extends Thread {
 	private final long waitTime;
 	private DataInputStream in;
 	private DataOutputStream out;
-	Logger logger = Logger.getLogger(ClientR.class);
+	Logger logger = Logger.getLogger(UploadClient.class);
 	private String ulazni_fajl;
 
 	public UploadClient(String[] args) {
-		super("TestClient");
+		super("UploadClient");
 		this.waitTime = 100;
 		ulazni_fajl = args[0];
 		init("UploadClient.properties");
