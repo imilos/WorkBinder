@@ -59,17 +59,12 @@ public class ClientExternal extends Thread {
 
 			// Milos, Januar 2017
             // Poslati prvo Optimization_UUID da bi se na serveru napravio odgovarajuci direktorijum
-            //BinderUtil.writeString(out, properties.getProperty("OptimizationUUID"));
+            BinderUtil.writeString(out, properties.getProperty("OptimizationUUID"));
 
 			BinderUtil.writeDoubles(out, parameters);
 
-			// // Prebacivanje relevantnih fajlova na server
-			// UtilPbfs.sendFile(example_name + ".dat", in, out);
-			// UtilPbfs.sendFile(properties.getProperty("ExecutableFileName"),
-			// in, out);
 
 			// Ispis teksta dobijenog od servera na stdout klijenta
-
 			String line = BinderUtil.readString(in);
 			if (line.equalsIgnoreCase("SUCCESS")) {
 				parameters = BinderUtil.readDoubles(in);

@@ -59,7 +59,7 @@ public class UploadClient extends Thread {
 
     		// Milos, Januar 2017.
             // Poslati prvo Optimization_UUID da bi se na serveru napravio odgovarajuci direktorijum
-			//BinderUtil.writeString(out, properties.getProperty("OptimizationUUID"));
+			BinderUtil.writeString(out, properties.getProperty("OptimizationUUID"));
 
 			// Posalji prvo ime fajla
 			File f = new File(ulazni_fajl);

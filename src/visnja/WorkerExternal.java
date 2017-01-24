@@ -25,21 +25,21 @@ public class WorkerExternal implements WorkerHandler {
 			in = new DataInputStream(workerConnector.getInputStream());
 			out = new DataOutputStream(workerConnector.getOutputStream());
 
-            // Prihvati optimizationUUID da bi se kreirao direktorijum pod tim imenom
-            //String optimizationUUID = BinderUtil.readString(in);
-            //String optimizationDirectory = System.getProperty("user.dir") + File.separator + optimizationUUID;
+            // Prihvati optimizationUUID
+            String optimizationUUID = BinderUtil.readString(in);
+            // Pretpostavka je da direktorijum optimizationDirectory vec postoji
+            String optimizationDirectory = System.getProperty("user.dir") + File.separator + optimizationUUID;
 
 			// Worker prima niz
 			double[] parameters = BinderUtil.readDoubles(in);
 
-			//String[] commandArray = { "MojExe.exe" };
 			//String[] commandArray = {"./run_exe.sh"};
-            //String[] commandArray = { optimizationDirectory + File.separator + "run_exe.sh" };
-			String[] commandArray = { "./run_exe.sh" };
-            //new File(optimizationDirectory + File.separator + "run_exe.sh").setExecutable(true);
+			String commandFullPath = optimizationDirectory + File.separator + "run_exe.sh";
+            String[] commandArray = { commandFullPath };
+            (new File(commandFullPath)).setExecutable(true);
 
 			ProcessBuilder pb = new ProcessBuilder(commandArray);
-			//pb.directory(new File(optimizationDirectory));
+			pb.directory(new File(optimizationDirectory));
 			pb.redirectErrorStream(true);
 
 			try {
