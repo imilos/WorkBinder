@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="Binder" basedir="." default="deploy">
+	<property file="build.properties" />
+	<path id="base.path">
+		<fileset dir="${project.libs}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+
+	<fileset dir="../" id="script.files">
+		<include name="run_binder.bat" />
+		<include name="startBinderJob.bat" />
+		<include name="startBinderJob.sh" />
+		<include name="run_binder.sh" />
+		<include name="submitRemoteJob.sh" />
+		<include name="shutdown_binder.bat" />
+		<include name="shutdown_binder.sh" />
+		<include name="initd_binder.sh" />
+	</fileset>
+
+	<fileset dir="../" id="prop.files">
+		<include name="binder.properties" />
+		<include name="WorkerDispatcher.properties" />
+		<include name="binder.policy" />
+		<include name="jdl.template" />
+	</fileset>
+
+	<fileset dir="${src.dir}" id="conf.files">
+		<include name="jndi.properties" />
+		<include name="log4j.xml" />
+	</fileset>
+
+	<fileset dir="../licenses" id="licenses">
+		<include name="*" />
+	</fileset>
+
+	<target name="clean" description="Delete all generated files">
+		<delete dir="${classes.dir}" />
+		<delete dir="${javadoc.dir}" />
+	</target>
+	<target name="compile" description="Compiles the Task">
+		<mkdir dir="${classes.dir}" />
+		<javac srcdir="${src.dir}" destdir="${classes.dir}">
+			<classpath>
+				<path refid="base.path" />
+			</classpath>
+			<compilerarg value="-Xlint:unchecked" />
+		</javac>
+	</target>
+	<target name="deploy" description="JARs the Task" depends="compile">
+
+		<jar destfile="${output.dir}/bin/${projectname}.jar">
+			<metainf dir="${src.dir}/META-INF" />
+			<fileset dir="${classes.dir}">
+				<include name="**/**/*.class" />
+			</fileset>
+			<fileset refid="prop.files" />
+			<fileset refid="conf.files" />
+			<fileset refid="script.files" />
+
+			<manifest>
+				<attribute name="Built-By" value="${author}" />
+				<!-- Information about the program itself -->
+				<attribute name="Implementation-Vendor" value="${vendor}" />
+				<attribute name="Implementation-Title" value="${title}" />
+				<attribute name="Implementation-Version" value="${version}" />
+				<attribute name="Main-Class" value="${main.class}" />
+				<!--<attribute name="Class-Path" value="${classpath}" /> -->
+			</manifest>
+
+
+		</jar>
+		<!-- Copy to output dir -->
+		<copy todir="${output.dir}/bin">
+			<fileset refid="script.files" />
+		</copy>
+		<copy file="${output.dir}/bin/${projectname}.jar" tofile="${output.dir}/bin/${remote.lib}" />
+		<copy todir="${output.dir}/conf">
+			<fileset refid="conf.files" />
+			<fileset refid="prop.files" />
+		</copy>
+		<copy todir="${output.dir}/licenses">
+			<fileset refid="licenses" />
+		</copy>
+
+		<!--Copy to JEE deploy dir -->
+		<copy file="${output.dir}/bin/${projectname}.jar" tofile="${deploy.dir}/${projectname}.jar" />
+
+	</target>
+	<target name="undeploy" description="Undeploy jar from server">
+		<delete file="${deploy.dir}/${projectname}.jar" />
+	</target>
+	<!-- Generate Javadoc -->
+	<target name="javadoc" description="Generates the javadoc">
+		<mkdir dir="${javadoc.dir}" />
+		<javadoc bottom="${projectname} by ${author} - ${copyright}" destdir="${javadoc.dir}" doctitle="Javadocs: ${projectname} ${version}" private="false" version="false" windowtitle="Javadocs: ${projectname} ${version}" classpathref="base.path">
+			<sourcepath>
+				<pathelement path="${src.dir}" />
+			</sourcepath>
+			<packageset dir="${src.dir}">
+				<include name="de/**" />
+			</packageset>
+			<link href="http://java.sun.com/j2se/1.4/docs/api/" />
+			<link href="http://java.sun.com/products/servlet/2.3/javadoc/" />
+		</javadoc>
+	</target>
+</project>

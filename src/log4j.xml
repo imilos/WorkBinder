@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd" >
+<log4j:configuration>
+	<appender name="stdout" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d %-5p [%c] (%t) %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="dailylog" class="org.apache.log4j.DailyRollingFileAppender">
+		<param name="File" value="../log/binder.log" />
+		<param name="Append" value="true" />
+		<param name="DatePattern" value="'.'yyyy-MM-dd" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d %-5p [%c] (%t) %m%n" />
+		</layout>
+	</appender>
+
+	<appender name="filelog" class="org.apache.log4j.RollingFileAppender">
+		<param name="File" value="../log/binder.log" />
+		<param name="Append" value="true" />
+		<param name="MaxFileSize" value="30000KB" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d %-5p [%c] (%t) %m%n" />
+		</layout>
+	</appender>
+
+	<category name="yu.ac.bg.rcub.binder">
+		<priority value="debug" />
+	</category>
+
+	<!-- limit voms-api spam -->
+	<category name="org.glite.voms">
+		<priority value="info" />
+	</category>
+
+	<!-- limit glite-trustmanager spam -->
+	<category name="org.glite.security">
+		<priority value="info" />
+	</category>
+
+	<!--limit everything to INFO mode, mostly because of AXIS -->
+    <!-- Please use dailylog appender in production! -->
+	<root>
+		<priority value="info"></priority>
+		<appender-ref ref="stdout" />
+	</root>
+
+</log4j:configuration>
