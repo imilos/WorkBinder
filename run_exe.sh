@@ -27,4 +27,4 @@ echo "$A+$B" | bc
 echo "$A*$B" | bc
 
 # Obrisi fajl kad se zavrsi evaluacija
-#rm -f stats-${SLUCAJNI}
+rm -f stats-${SLUCAJNI}
