@@ -2,9 +2,7 @@ package visnja;
 
 import java.io.*;
 import java.nio.file.*;
-
 import rs.ac.kg.pmf.pbfs.UtilPbfs;
-
 import yu.ac.bg.rcub.binder.BinderCommunicationException;
 import yu.ac.bg.rcub.binder.BinderUtil;
 import yu.ac.bg.rcub.binder.handler.worker.WorkerConnector;
@@ -17,6 +15,11 @@ public class WorkerExternal implements WorkerHandler {
 
     private BufferedReader ProcessInput;
     private BufferedWriter ProcessOutput;
+    
+    // Direktorijum u kome se drze sve optimizacije, svaka u svom poddirektorijumu
+    public static String OPTIMIZATIONS_DIR = "optimizacije";
+    // Naziv izvrsnog fajla
+    public static String EXECUTABLE = "run_exe.sh";
        
     
     @Override
@@ -31,7 +34,8 @@ public class WorkerExternal implements WorkerHandler {
             // Prihvati optimizationUUID
             String optimizationUUID = BinderUtil.readString(in);
             // Pretpostavka je da direktorijum optimizationDirectory vec postoji
-            String optimizationDirectory = System.getProperty("user.dir") + File.separator + optimizationUUID;
+            String optimizationDirectory = System.getProperty("user.dir") + 
+                    File.separator + OPTIMIZATIONS_DIR + File.separator +  optimizationUUID;
 
             // Worker prima niz
             double[] parameters = BinderUtil.readDoubles(in);
@@ -110,24 +114,4 @@ public class WorkerExternal implements WorkerHandler {
         workerConnector.log("EXTERNAL worker handler end.");
     }
     
-
-    /**
-     * Broji fajlove koji odgovaraju nekom prefiksu
-     * @param path
-     * @param prefix
-     * @return count
-     */
-    public static int countFilesForPathByPrefix(final String path, final String prefix) {
-        int count = 0;
-        
-        try {
-            DirectoryStream<Path> newDirectoryStream = Files.newDirectoryStream(Paths.get(path), prefix + "*");
-            
-            for (final Path newDirectoryStreamItem : newDirectoryStream)
-                count += 1;
-            
-        } catch (IOException e) {}
-        
-        return count;
-    }    
 }
