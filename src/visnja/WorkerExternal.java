@@ -40,7 +40,7 @@ public class WorkerExternal implements WorkerHandler {
             // Worker prima niz
             double[] parameters = BinderUtil.readDoubles(in);
 
-            String commandFullPath = optimizationDirectory + File.separator + "run_exe.sh";
+            String commandFullPath = optimizationDirectory + File.separator + EXECUTABLE;
             String[] commandArray = { commandFullPath };
             (new File(commandFullPath)).setExecutable(true);
 
