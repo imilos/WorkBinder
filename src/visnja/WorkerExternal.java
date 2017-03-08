@@ -48,9 +48,6 @@ public class WorkerExternal implements WorkerHandler {
             pb.directory(new File(optimizationDirectory));
             pb.redirectErrorStream(true);
             
-            // Brojanje fajlova stat-* za statistiku
-            //int broj = countFilesForPathByPrefix(optimizationDirectory, "stats-*");
-
             try {
                 final Process pr = pb.start();
                 workerConnector.log("Started exe");
@@ -72,18 +69,18 @@ public class WorkerExternal implements WorkerHandler {
                 ProcessOutput.close();
 
                 // Preuzimanje izlaza iz .exe sa stdout i prosledjivanje klijentu
-                ProcessInput = new BufferedReader(new InputStreamReader(
-                        pr.getInputStream()));
+                ProcessInput = new BufferedReader(new InputStreamReader(pr.getInputStream()));
                 String s = ProcessInput.readLine();
                 workerConnector.log("Primio sam " + s);
-                // ako .exe nije digao exception
+                
+                // Ako EXECUTABLE nije digao exception
                 if (s.equalsIgnoreCase("SUCCESS")) {
                     BinderUtil.writeString(out, "SUCCESS");
-                    // prvo primi broj rezultata koje ce ocitati
-                    int len = Integer.parseInt(ProcessInput.readLine());
-                    double[] results = new double[len];
-                    // prima jedan po jedan rezultat
-                    for (int i = 0; i < len; i++) 
+                    // Prvo primi broj rezultata koje ce ocitati
+                    int duzina = Integer.parseInt(ProcessInput.readLine());
+                    double[] results = new double[duzina];
+                    // A onda prima jedan po jedan rezultat
+                    for (int i = 0; i<duzina; i++) 
                         results[i] = Double.parseDouble(ProcessInput.readLine());
                     
                     BinderUtil.writeDoubles(out, results);
