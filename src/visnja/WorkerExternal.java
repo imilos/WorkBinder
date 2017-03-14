@@ -57,9 +57,10 @@ public class WorkerExternal implements WorkerHandler {
             try {
                 final Process pr = pb.start();
                 workerConnector.log("Started exe");
-                // slanje niza doublova .exe-u preko std input-a
-                // prvo se salje broj parametara
-                // a onda jedan po jedan parametar
+                /* 
+                Slanje niza doublova .exe-u preko std input-a.
+                Prvo se salje broj parametara, a onda jedan po jedan parametar 
+                */
                 ProcessOutput = new BufferedWriter(new OutputStreamWriter(pr.getOutputStream()));
                 ProcessOutput.write(Integer.toString(parameters.length));
                 ProcessOutput.newLine();
@@ -72,34 +73,35 @@ public class WorkerExternal implements WorkerHandler {
                 ProcessOutput.flush();
                 ProcessOutput.close();
 
-                // preuzimanje izlaza iz .exe sa stdout i prosledjivanje klijentu 
+                // Preuzimanje izlaza iz EXECUTABLE sa stdout i prosledjivanje klijentu 
                 ProcessInput = new BufferedReader(new InputStreamReader(pr.getInputStream()));
                 String s = ProcessInput.readLine();
                 workerConnector.log("Primio sam " + s);
-                // ako .exe nije digao exception
+                // Ako EXECUTABLE nije digao exception
 
                 if (s.equalsIgnoreCase("OK")) {
 
                     BinderUtil.writeString(out, s);
-                    // prvo primi broj rezultata koje ce ocitati
+                    // Prvo primi broj rezultata koje ce ocitati
                     int duzina = Integer.parseInt(ProcessInput.readLine());
                     double[] results = new double[duzina];
-                    // prima jedan po jedan rezultat
-                    for (int i = 0; i < duzina; i++) {
+                    
+                    // Prima jedan po jedan rezultat
+                    for (int i=0; i<duzina; i++) 
                         results[i] = Double.parseDouble(ProcessInput.readLine());
-                    }
+                    
                     BinderUtil.writeDoubles(out, results);
                 } else {
                     workerConnector.log("Greska je " + s);
                     BinderUtil.writeString(out, s);
                 }
 
-                //BinderUtil.writeString(out,ProcessInput.readLine());
                 pr.waitFor();
                 ProcessInput.close();
                 pr.destroy();
                 workerConnector.log("Finished exe");
                 BinderUtil.writeString(out, "-finished-");
+                
                 in.close();
                 out.close();
             } catch (IOException e) {

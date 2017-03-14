@@ -24,13 +24,13 @@ public class ClientExternal extends Thread {
     private DataInputStream in;
     private DataOutputStream out;
     Logger logger = Logger.getLogger(ClientExternal.class);
-    private double[] parameters;
+    private double[] parametri;
 
     public ClientExternal(String[] args) {
         super("TestClient");
         this.waitTime = 1000;
-
-        parameters = new double[Integer.parseInt(args[1])];
+        
+        parametri = new double[Integer.parseInt(args[1])];
         int i = 0;
 
         BufferedReader br = null;
@@ -40,7 +40,7 @@ public class ClientExternal extends Thread {
             br = new BufferedReader(new FileReader(args[0]));
 
             while ((sCurrentLine = br.readLine()) != null) {
-                parameters[i++] = Double.parseDouble(sCurrentLine);
+                parametri[i++] = Double.parseDouble(sCurrentLine);
             }
 
         } catch (IOException e) {
@@ -86,23 +86,27 @@ public class ClientExternal extends Thread {
             // Poslati prvo Optimization_UUID da bi se na serveru napravio odgovarajuci direktorijum
             BinderUtil.writeString(out, properties.getProperty("OptimizationUUID"));     
 
-            BinderUtil.writeDoubles(out, parameters);
+            // Posalji parametre
+            BinderUtil.writeDoubles(out, parametri);
 
             // Ispis teksta dobijenog od servera na stdout klijenta
             String line = BinderUtil.readString(in);
 
+            // Ako je radnik izracunao vraca "OK"
             if (line.equalsIgnoreCase("OK")) {
-                parameters = BinderUtil.readDoubles(in);
+                double rezultati[] = BinderUtil.readDoubles(in);
 
                 System.out.print(";" + line + ";");
-                for (int i = 0; i < parameters.length; i++) {
-                    System.out.print(Double.toString(parameters[i]) + ";");
-                }
-            } else if (!poruka.equalsIgnoreCase("") && line.equalsIgnoreCase(poruka)) {
+                
+                for (int i = 0; i < rezultati.length; i++) 
+                    System.out.print(Double.toString(rezultati[i]) + ";");
+                
+            // Ovo treba izmeniti, jer se vise ne koristi Worker.properties fajl
+            } else if (!poruka.equalsIgnoreCase("") && line.equalsIgnoreCase(poruka)) 
                 System.out.println(";" + line + ";" + "MY_ERROR;x;");
-            } else {
+            else
                 System.out.println(";" + line + ";" + "EXE_FAILED;x;");
-            }
+            
 
             line = BinderUtil.readString(in);
             
