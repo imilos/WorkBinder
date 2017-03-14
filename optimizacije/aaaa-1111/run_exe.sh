@@ -21,7 +21,7 @@ read -r BROJ
 read -r A
 read -r B
 
-echo SUCCESS
+echo OK
 echo 2
 echo "$A+$B" | bc
 echo "$A*$B" | bc
