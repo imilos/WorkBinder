@@ -1,9 +1,17 @@
 package visnja;
 
-import java.io.*;
-import java.nio.file.*;
-import rs.ac.kg.pmf.pbfs.UtilPbfs;
-import yu.ac.bg.rcub.binder.BinderCommunicationException;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+
+import java.io.IOException;
+import java.util.Properties;
+
 import yu.ac.bg.rcub.binder.BinderUtil;
 import yu.ac.bg.rcub.binder.handler.worker.WorkerConnector;
 import yu.ac.bg.rcub.binder.handler.worker.WorkerHandler;
@@ -20,9 +28,8 @@ public class WorkerExternal implements WorkerHandler {
     public static String OPTIMIZATIONS_DIR = "optimizacije";
     // Naziv izvrsnog fajla
     public static String EXECUTABLE = "run_exe.sh";
-       
     
-    @Override
+
     public void run(WorkerConnector workerConnector) {
 
         workerConnector.log("Started a new EXTERNAL worker handler thread!");
@@ -36,31 +43,28 @@ public class WorkerExternal implements WorkerHandler {
             // Pretpostavka je da direktorijum optimizationDirectory vec postoji
             String optimizationDirectory = System.getProperty("user.dir") + 
                     File.separator + OPTIMIZATIONS_DIR + File.separator +  optimizationUUID;
-
+            
             // Worker prima niz
             double[] parameters = BinderUtil.readDoubles(in);
-
+            
             String commandFullPath = optimizationDirectory + File.separator + EXECUTABLE;
             String[] commandArray = { commandFullPath };
-            (new File(commandFullPath)).setExecutable(true);
-
-            ProcessBuilder pb = new ProcessBuilder(commandArray);
-            pb.directory(new File(optimizationDirectory));
-            pb.redirectErrorStream(true);
+            (new File(commandFullPath)).setExecutable(true);            
             
+            ProcessBuilder pb = new ProcessBuilder(commandArray);
+            pb.redirectErrorStream(true);
+
             try {
                 final Process pr = pb.start();
                 workerConnector.log("Started exe");
-                /* 
-                Slanje niza doublova .exe-u preko std input-a
-                prvo se salje broj parametara
-                 a onda jedan po jedan parametar 
-                */
+                // slanje niza doublova .exe-u preko std input-a
+                // prvo se salje broj parametara
+                // a onda jedan po jedan parametar
                 ProcessOutput = new BufferedWriter(new OutputStreamWriter(pr.getOutputStream()));
                 ProcessOutput.write(Integer.toString(parameters.length));
                 ProcessOutput.newLine();
                 
-                for (int i = 0; i < parameters.length; i++) {
+                for (int i=0; i < parameters.length; i++) {
                     ProcessOutput.write(Double.toString(parameters[i]));
                     ProcessOutput.newLine();
                 }
@@ -68,38 +72,41 @@ public class WorkerExternal implements WorkerHandler {
                 ProcessOutput.flush();
                 ProcessOutput.close();
 
-                // Preuzimanje izlaza iz .exe sa stdout i prosledjivanje klijentu
+                // preuzimanje izlaza iz .exe sa stdout i prosledjivanje klijentu 
                 ProcessInput = new BufferedReader(new InputStreamReader(pr.getInputStream()));
                 String s = ProcessInput.readLine();
                 workerConnector.log("Primio sam " + s);
-                
-                // Ako EXECUTABLE nije digao exception
-                if (s.equalsIgnoreCase("SUCCESS")) {
-                    BinderUtil.writeString(out, "SUCCESS");
-                    // Prvo primi broj rezultata koje ce ocitati
+                // ako .exe nije digao exception
+
+                if (s.equalsIgnoreCase("OK")) {
+
+                    BinderUtil.writeString(out, s);
+                    // prvo primi broj rezultata koje ce ocitati
                     int duzina = Integer.parseInt(ProcessInput.readLine());
                     double[] results = new double[duzina];
-                    // A onda prima jedan po jedan rezultat
-                    for (int i = 0; i<duzina; i++) 
+                    // prima jedan po jedan rezultat
+                    for (int i = 0; i < duzina; i++) {
                         results[i] = Double.parseDouble(ProcessInput.readLine());
-                    
+                    }
                     BinderUtil.writeDoubles(out, results);
                 } else {
                     workerConnector.log("Greska je " + s);
                     BinderUtil.writeString(out, s);
                 }
 
-                // BinderUtil.writeString(out,ProcessInput.readLine());
+                //BinderUtil.writeString(out,ProcessInput.readLine());
                 pr.waitFor();
                 ProcessInput.close();
                 pr.destroy();
                 workerConnector.log("Finished exe");
                 BinderUtil.writeString(out, "-finished-");
+                in.close();
+                out.close();
             } catch (IOException e) {
                 workerConnector.log("MojExe nije startovao kako treba>>>> " + e.getMessage());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-            } 
+            }
 
         } catch (FileNotFoundException e) {
             workerConnector.log("ServerDispatcherThread:   *** ERROR *** File not found ", e);
@@ -110,5 +117,4 @@ public class WorkerExternal implements WorkerHandler {
         }
         workerConnector.log("EXTERNAL worker handler end.");
     }
-    
 }

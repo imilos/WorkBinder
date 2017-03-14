@@ -1,5 +1,7 @@
 package visnja;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -27,10 +29,32 @@ public class ClientExternal extends Thread {
     public ClientExternal(String[] args) {
         super("TestClient");
         this.waitTime = 1000;
-        parameters = new double[args.length];
-        for (int i = 0; i < args.length; i++) {
-            parameters[i] = Double.parseDouble(args[i]);
+
+        parameters = new double[Integer.parseInt(args[1])];
+        int i = 0;
+
+        BufferedReader br = null;
+
+        try {
+            String sCurrentLine;
+            br = new BufferedReader(new FileReader(args[0]));
+
+            while ((sCurrentLine = br.readLine()) != null) {
+                parameters[i++] = Double.parseDouble(sCurrentLine);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (br != null) {
+                    br.close();
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
         }
+
         init("External.properties");
     }
 
@@ -48,35 +72,42 @@ public class ClientExternal extends Thread {
         }
     }
 
-    private void communicate() throws BinderCommunicationException,
-            InterruptedException {
+    private void communicate() throws BinderCommunicationException, InterruptedException {
 
         Thread.sleep(waitTime);
 
         try {
             in = new DataInputStream(clientConn.getInputStream());
             out = new DataOutputStream(clientConn.getOutputStream());
-
+            
+            String poruka="OK";
+            
             // Milos, Januar 2017
             // Poslati prvo Optimization_UUID da bi se na serveru napravio odgovarajuci direktorijum
-            BinderUtil.writeString(out, properties.getProperty("OptimizationUUID"));
+            BinderUtil.writeString(out, properties.getProperty("OptimizationUUID"));     
 
             BinderUtil.writeDoubles(out, parameters);
 
             // Ispis teksta dobijenog od servera na stdout klijenta
             String line = BinderUtil.readString(in);
-            if (line.equalsIgnoreCase("SUCCESS")) {
+
+            if (line.equalsIgnoreCase("OK")) {
                 parameters = BinderUtil.readDoubles(in);
 
                 System.out.print(";" + line + ";");
                 for (int i = 0; i < parameters.length; i++) {
                     System.out.print(Double.toString(parameters[i]) + ";");
                 }
+            } else if (!poruka.equalsIgnoreCase("") && line.equalsIgnoreCase(poruka)) {
+                System.out.println(";" + line + ";" + "MY_ERROR;x;");
             } else {
                 System.out.println(";" + line + ";" + "EXE_FAILED;x;");
             }
 
             line = BinderUtil.readString(in);
+            
+            in.close();
+            out.close();
         } catch (FileNotFoundException e) {
             logger.error("File not found " + e.getMessage(), e);
         } catch (IOException e) {
@@ -87,8 +118,7 @@ public class ClientExternal extends Thread {
     private void testCEs() throws BinderCommunicationException {
         CEInfo[] ceInfos = clientConn.executeCEListMatch();
         int size = ceInfos.length;
-        System.out.println("CE list match report by the binder, total of "
-                + size + " CEs matched.");
+        System.out.println("CE list match report by the binder, total of " + size + " CEs matched.");
         for (CEInfo ceInfo : ceInfos) {
             System.out.println(ceInfo);
         }
@@ -97,8 +127,7 @@ public class ClientExternal extends Thread {
     public void run() {
         logger.info("Starting External client...");
         try {
-            clientConn = ClientConnectorFactory
-                    .createClientConnector(properties);
+            clientConn = ClientConnectorFactory.createClientConnector(properties);
             testCEs();
             clientConn.connect();
             /* actual client communication */
