@@ -5,13 +5,12 @@ import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-
 import java.io.IOException;
 import java.util.Properties;
-
 import yu.ac.bg.rcub.binder.BinderUtil;
 import yu.ac.bg.rcub.binder.handler.worker.WorkerConnector;
 import yu.ac.bg.rcub.binder.handler.worker.WorkerHandler;
@@ -47,18 +46,20 @@ public class WorkerExternal implements WorkerHandler {
             // Worker prima niz
             double[] parameters = BinderUtil.readDoubles(in);
             
+            // EXECUTABLE-u se salje lokacija maticne optimizacije da bi znao gde da smesti fajlove za statistiku
             String commandFullPath = optimizationDirectory + File.separator + EXECUTABLE;
-            String[] commandArray = { commandFullPath };
-            (new File(commandFullPath)).setExecutable(true);            
+            String[] commandArray = { commandFullPath, getBinderDir("Worker.properties"), OPTIMIZATIONS_DIR, optimizationUUID };
+            (new File(commandFullPath)).setExecutable(true);
             
             ProcessBuilder pb = new ProcessBuilder(commandArray);
+            pb.directory(new File(optimizationDirectory));
             pb.redirectErrorStream(true);
 
             try {
                 final Process pr = pb.start();
                 workerConnector.log("Started exe");
                 /* 
-                Slanje niza doublova .exe-u preko std input-a.
+                Slanje niza doublova EXECUTABLE-u preko stdinput-a.
                 Prvo se salje broj parametara, a onda jedan po jedan parametar 
                 */
                 ProcessOutput = new BufferedWriter(new OutputStreamWriter(pr.getOutputStream()));
@@ -77,8 +78,8 @@ public class WorkerExternal implements WorkerHandler {
                 ProcessInput = new BufferedReader(new InputStreamReader(pr.getInputStream()));
                 String s = ProcessInput.readLine();
                 workerConnector.log("Primio sam " + s);
-                // Ako EXECUTABLE nije digao exception
 
+                // Ako EXECUTABLE nije digao exception
                 if (s.equalsIgnoreCase("OK")) {
 
                     BinderUtil.writeString(out, s);
@@ -119,4 +120,14 @@ public class WorkerExternal implements WorkerHandler {
         }
         workerConnector.log("EXTERNAL worker handler end.");
     }
+    
+    private String getBinderDir(String propFilePath) throws FileNotFoundException, IOException {
+
+        Properties properties = new Properties();
+        
+        properties.load(new FileInputStream(new File(propFilePath)));
+        
+        return properties.getProperty("BinderDir");
+    }
+
 }

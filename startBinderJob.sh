@@ -6,40 +6,38 @@
 echo CE = $1
 echo routingInfo = $2
 echo jobID = $3
-echo Log Filename = $4
+echo LogFilename = $4
 
-lcg-cp --vo aegis lfn:/grid/aegis/visnja/binder/archive.tgz file:./archive.tgz
-tar xzf archive.tgz
+# Zapamti tekuci direktorijum
+BINDER_DIR=${PWD}
 
-chmod a+x binder.jar external.jar MojExe.exe mono run_exe.sh
+# Napravi privremeni dir za datu instancu WorkerDispatcher-a
+TMP_DIR=`mktemp -d -t`
 
-JOB_START_TIME=`expr \`date +'%s'\` / 60` # current time in minutes 
-CE=`$EDG_LOCATION/bin/edg-brokerinfo getCE`
-CE_GRID_HOST=`echo "$CE"| cut -d ":" -f 1`
+# Iskopiraj sve optimizacije u $TMP_DIR
+cp -r ${BINDER_DIR}/optimizacije ${TMP_DIR}/optimizacije
 
-# in minutes
-MAX_WALL_CLOCK_TIME=`ldapsearch -x -h $CE_GRID_HOST -p 2135 -b "GlueCEUniqueID=$CE,mds-vo-name=local,o=grid" 'objectclass=GlueCEPolicy' GlueCEPolicyMaxWallClockTime | grep GlueCEPolicyMaxWallClockTime: | cut -d ' ' -f 2`
-if [ -z $MAX_WALL_CLOCK_TIME ]; then
-  MAX_WALL_CLOCK_TIME=3600
-fi
-echo MAX_WALL_CLOCK_TIME = $MAX_WALL_CLOCK_TIME
+# Promena moda za svaki slucaj
+chmod +x ${TMP_DIR}/optimizacije
+
+# Predji u privremeni direktorijum
+cd ${TMP_DIR}
+
+# Napravi properties fajl sa maticnom lokacijom BINDER_DIR
+echo "BinderDir=${BINDER_DIR}" > Worker.properties
+
+MAX_WALL_CLOCK_TIME=1000
 
 count=0
-while [ $count -lt 50 -a $MAX_WALL_CLOCK_TIME -gt 0 ]
+while [ $count -lt 50 ]
 do
   count=`expr $count + 1`
-  java -cp "binder.jar:external.jar:log4j-1.2.15.jar" yu.ac.bg.rcub.binder.handler.worker.WorkerDispatcher "WorkerDispatcher.properties" $1 $2 $3 $4_$count $MAX_WALL_CLOCK_TIME
-  NOW=`expr \`date +'%s'\` / 60` # current time in minutes
-  MAX_WALL_CLOCK_TIME=`expr $MAX_WALL_CLOCK_TIME - $NOW + $JOB_START_TIME`
+  #java -cp "bin/:lib/log4j-1.2.15.jar" yu.ac.bg.rcub.binder.handler.worker.WorkerDispatcher "WorkerDispatcher.properties" $1 $2 $3 $4 $MAX_WALL_CLOCK_TIME
+  java -cp "${BINDER_DIR}/bin/:${BINDER_DIR}/lib/log4j-1.2.15.jar" yu.ac.bg.rcub.binder.handler.worker.WorkerDispatcher "${BINDER_DIR}/WorkerDispatcher.properties" $1 $2 $3 $4 $MAX_WALL_CLOCK_TIME
 done
 
-# compress all output log files into one file
-tar -cvzf $4.tar.gz ${4}_*
-
-# delete log files for good manner
-rm -f ${4}_*
+# Obrisi ceo temporary direktorijum
+rm -rf ${TMP_DIR}
 
 echo Server Job finished.
 
-# java -cp "." yu.ac.bg.rcub.binder.handler.worker.WorkerDispatcher "WorkerDispatcher.properties" $1 $2 $3 $4 finished
- 
