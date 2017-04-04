@@ -14,8 +14,8 @@ BINDER_DIR=${PWD}
 # Napravi privremeni dir za datu instancu WorkerDispatcher-a
 TMP_DIR=`mktemp -d -t`
 
-# Iskopiraj sve optimizacije u $TMP_DIR
-cp -r ${BINDER_DIR}/optimizacije ${TMP_DIR}/optimizacije
+# Iskopiraj sve optimizacije u $TMP_DIR1 kao symlinks
+cp -as ${BINDER_DIR}/optimizacije ${TMP_DIR}/optimizacije
 
 # Promena moda za svaki slucaj
 chmod +x ${TMP_DIR}/optimizacije
