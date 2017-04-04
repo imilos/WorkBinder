@@ -18,7 +18,7 @@ TMP_DIR=`mktemp -d -t`
 cp -as ${BINDER_DIR}/optimizacije ${TMP_DIR}/optimizacije
 
 # Promena moda za svaki slucaj
-chmod +x ${TMP_DIR}/optimizacije
+chmod -R +x ${TMP_DIR}/optimizacije
 
 # Predji u privremeni direktorijum
 cd ${TMP_DIR}
