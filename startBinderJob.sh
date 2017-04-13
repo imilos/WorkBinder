@@ -12,10 +12,10 @@ echo LogFilename = $4
 BINDER_DIR=${PWD}
 
 # Napravi privremeni dir za datu instancu WorkerDispatcher-a
-TMP_DIR=`mktemp -d -t`
+TMP_DIR=`mktemp -d -t --tmpdir=./tmp/`
 
-# Iskopiraj sve optimizacije u $TMP_DIR kao symlinks
-cp -as ${BINDER_DIR}/optimizacije ${TMP_DIR}/optimizacije
+# Iskopiraj sve optimizacije u $TMP_DIR kao hard links
+cp -al ${BINDER_DIR}/optimizacije ${TMP_DIR}/optimizacije
 
 # Promena moda za svaki slucaj
 chmod -R +x ${TMP_DIR}/optimizacije
