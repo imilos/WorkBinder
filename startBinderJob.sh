@@ -15,7 +15,7 @@ BINDER_DIR=${PWD}
 TMP_DIR=`mktemp -d -t --tmpdir=./tmp/`
 
 # Iskopiraj sve optimizacije u $TMP_DIR kao hard links
-cp -al ${BINDER_DIR}/optimizacije ${TMP_DIR}/optimizacije
+cp -r ${BINDER_DIR}/optimizacije ${TMP_DIR}/optimizacije
 
 # Promena moda za svaki slucaj
 chmod -R +x ${TMP_DIR}/optimizacije
