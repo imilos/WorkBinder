@@ -121,6 +121,14 @@ public class WorkerExternal implements WorkerHandler {
         workerConnector.log("EXTERNAL worker handler end.");
     }
     
+    /**
+     * Vraca direktorijum maticne instalacije Bindera, naveden u propFilePath
+     * 
+     * @param propFilePath
+     * @return
+     * @throws FileNotFoundException
+     * @throws IOException 
+     */
     private String getBinderDir(String propFilePath) throws FileNotFoundException, IOException {
 
         Properties properties = new Properties();
