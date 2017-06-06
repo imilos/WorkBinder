@@ -6,7 +6,7 @@ OPTIMIZATION_UUID=$3
 SLUCAJNI=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 12 | head -n 1`
 
 # Kreira se fajl sa slucajnim nazivom. Broj tih fajlova upucuje na broj trenutno aktivnih evaluacija 
-STATS_FILE=${BINDER_DIR}/${OPTIMIZATIONS_DIR}/${OPTIMIZATION_UUID}/stats-${SLUCAJNI}
+STATS_FILE=${BINDER_DIR}/${OPTIMIZATIONS_DIR}/${OPTIMIZATION_UUID}/.stats-${SLUCAJNI}
 
 touch ${STATS_FILE}
 
@@ -14,6 +14,8 @@ touch ${STATS_FILE}
 read -r BROJ
 read -r A
 read -r B
+
+sleep 20
 
 echo OK
 echo 2
