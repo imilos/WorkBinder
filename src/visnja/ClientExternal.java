@@ -27,33 +27,18 @@ public class ClientExternal extends Thread {
     private double[] parametri;
 
     public ClientExternal(String[] args) {
+
         super("TestClient");
         this.waitTime = 1000;
         
-        parametri = new double[Integer.parseInt(args[1])];
-        int i = 0;
+        // Prvi argument je broj parametara
+        int n = Integer.parseInt(args[0]);
+        parametri = new double[n];
 
-        BufferedReader br = null;
+        // Ostali argumenti su redom parametri
+        for (int i=0; i<n; i++)
+            parametri[i] = Double.parseDouble(args[i+1]);
 
-        try {
-            String sCurrentLine;
-            br = new BufferedReader(new FileReader(args[0]));
-
-            while ((sCurrentLine = br.readLine()) != null) {
-                parametri[i++] = Double.parseDouble(sCurrentLine);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (br != null) {
-                    br.close();
-                }
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-        }
 
         init("External.properties");
     }
@@ -84,7 +69,7 @@ public class ClientExternal extends Thread {
             
             // Milos, Januar 2017
             // Poslati prvo Optimization_UUID da bi se na serveru napravio odgovarajuci direktorijum
-            BinderUtil.writeString(out, properties.getProperty("OptimizationUUID"));     
+            BinderUtil.writeString(out, properties.getProperty("OptimizationUUID"));
 
             // Posalji parametre
             BinderUtil.writeDoubles(out, parametri);
