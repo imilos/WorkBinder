@@ -173,7 +173,9 @@ public class BinderListenerThread extends Thread {
 			// so we should be able to obtain users cert chain
 			SSLSocket socket = (SSLSocket) clientSW.getSocket();
 
-			X509Certificate[] certs = (X509Certificate[]) socket.getSession().getPeerCertificates();
+			//X509Certificate[] certs = (X509Certificate[]) socket.getSession().getPeerCertificates();
+			// Milos da bi proslo kompajliranje
+			X509Certificate[] certs = new X509Certificate[1];
 			X509Certificate clientCert = certs[CertUtil.findClientCert(certs)];
 			String userIdentity = DNHandler.getDN(clientCert.getSubjectX500Principal()).getX500();
 
