@@ -1,7 +1,5 @@
 package visnja;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -15,32 +13,32 @@ import yu.ac.bg.rcub.binder.BinderUtil;
 import yu.ac.bg.rcub.binder.CEInfo;
 import yu.ac.bg.rcub.binder.handler.client.ClientConnector;
 import yu.ac.bg.rcub.binder.handler.client.ClientConnectorFactory;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
-public class ClientExternal extends Thread {
+public class ClientExternalXML extends Thread {
 
     private Properties properties = null;
     private ClientConnector clientConn = null;
     private final long waitTime;
     private DataInputStream in;
     private DataOutputStream out;
-    Logger logger = Logger.getLogger(ClientExternal.class);
-    private double[] parametri;
+    Logger logger = Logger.getLogger(ClientExternalXML.class);
+    private String xmlInputData;
 
-    public ClientExternal(String[] args) {
+    public ClientExternalXML(String[] args) {
 
         super("TestClient");
         this.waitTime = 1000;
         
-        // Prvi argument je broj parametara
-        int n = Integer.parseInt(args[0]);
-        parametri = new double[n];
+        try {
+        	// Cita XML fajl iz komandne linije i pakuje u string
+        	xmlInputData = new String(Files.readAllBytes(Paths.get(args[0])));
+        } catch (IOException e) {
+        	System.err.println("Fajl " + args[0] + "nije moguce otvoriti.");
+		}
 
-        // Ostali argumenti su redom parametri
-        for (int i=0; i<n; i++)
-            parametri[i] = Double.parseDouble(args[i+1]);
-
-
-        init("External.properties");
+        init("ExternalXML.properties");
     }
 
     private void init(String propFilePath) {
@@ -65,33 +63,29 @@ public class ClientExternal extends Thread {
             in = new DataInputStream(clientConn.getInputStream());
             out = new DataOutputStream(clientConn.getOutputStream());
             
-            String poruka="OK";
+            String poruka = "OK";
             
-            // Milos, Januar 2017
-            // Poslati prvo Optimization_UUID da bi se na serveru napravio odgovarajuci direktorijum
+            // Poslati prvo Optimization_UUID da bi se znalo o kojoj optimizaciji se radi
             BinderUtil.writeString(out, properties.getProperty("OptimizationUUID"));
 
-            // Posalji parametre
-            BinderUtil.writeDoubles(out, parametri);
+            // Posalji ulazni XML
+            BinderUtil.writeString(out, xmlInputData);
             
-            // Ispis teksta dobijenog od servera na stdout klijenta
+            // Ucitaj liniju sa servera i proveri status
             String line = BinderUtil.readString(in);
 
             // Ako je radnik izracunao vraca "OK"
             if (line.equalsIgnoreCase("OK")) {
-                double rezultati[] = BinderUtil.readDoubles(in);
-
-                System.out.print(";" + line + ";");
-                
-                for (int i = 0; i < rezultati.length; i++) 
-                    System.out.print(Double.toString(rezultati[i]) + ";");
-                
-            } else if (!poruka.equalsIgnoreCase("") && line.equalsIgnoreCase(poruka)) 
-                System.out.println(";" + line + ";" + "MY_ERROR;x;");
-            else
-                System.out.println(";" + line + ";" + "EXE_FAILED;x;");
+            	
+            	// Iscitaj sadrzaj izlaznog XML-a
+            	String xmlOutputData = BinderUtil.readString(in);
+            	
+            	System.out.println(";" + "OK" + ";" + xmlOutputData);
+            }
+            // Ako je doslo do greske,tumaci gresku
+            else if (!poruka.equalsIgnoreCase("")) 
+                System.out.println(";" + line + ";" + "EXE_FAILED;");
             
-
             line = BinderUtil.readString(in);
             
             in.close();
@@ -133,6 +127,6 @@ public class ClientExternal extends Thread {
 
     public static void main(String[] args) {
         // argumenti su niz parametara na osnovu kojih se vrsi evaluacija
-        new ClientExternal(args).start();
+        new ClientExternalXML(args).start();
     }
 }
