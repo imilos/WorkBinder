@@ -58,8 +58,7 @@ public class WorkerExternalXML implements WorkerHandler {
             String xmlData = BinderUtil.readString(in);
             
             // Snimi dobijeni string sa XML-om u fajl
-            OpenOption[] options = new OpenOption[] { CREATE_NEW };
-            Files.write(Paths.get(optimizationDirectory + File.separator + XMLINPUT), xmlData.getBytes(), options);
+            Files.write(Paths.get(optimizationDirectory + File.separator + XMLINPUT), xmlData.getBytes());
             
             // EXECUTABLE-u se salje lokacija maticne optimizacije da bi znao gde da smesti fajlove za statistiku
             String commandFullPath = optimizationDirectory + File.separator + EXECUTABLE;
