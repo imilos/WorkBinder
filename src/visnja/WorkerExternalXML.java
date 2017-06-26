@@ -60,6 +60,10 @@ public class WorkerExternalXML implements WorkerHandler {
             // Snimi dobijeni string sa XML-om u fajl
             Files.write(Paths.get(optimizationDirectory + File.separator + XMLINPUT), xmlData.getBytes());
             
+            // Lokacija output xml fajla. Obrisati ako postoji
+            Path xmlOutputPath = Paths.get(optimizationDirectory + File.separator + XMLOUTPUT);
+            Files.deleteIfExists(xmlOutputPath);
+            
             // EXECUTABLE-u se salje lokacija maticne optimizacije da bi znao gde da smesti fajlove za statistiku
             String commandFullPath = optimizationDirectory + File.separator + EXECUTABLE;
             String[] commandArray = { commandFullPath, getBinderDir("Worker.properties"), OPTIMIZATIONS_DIR, optimizationUUID, XMLINPUT };
@@ -82,10 +86,7 @@ public class WorkerExternalXML implements WorkerHandler {
                 ProcessInput = new BufferedReader(new InputStreamReader(pr.getInputStream()));
                 String s = ProcessInput.readLine();
                 workerConnector.log("Primio sam " + s);
-                
-                // Lokacija output xml fajla
-                Path xmlOutputPath = Paths.get(optimizationDirectory + File.separator + XMLOUTPUT);
-                
+                                
                 // Ako EXECUTABLE nije digao exception i postoji izlazni XML
                 if (s.equalsIgnoreCase("OK") && Files.exists(xmlOutputPath)) {
                 	
