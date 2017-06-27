@@ -1,7 +1,6 @@
 package visnja;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -9,19 +8,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.Path;
-import java.nio.file.OpenOption;
 import java.util.Properties;
 import yu.ac.bg.rcub.binder.BinderUtil;
 import yu.ac.bg.rcub.binder.handler.worker.WorkerConnector;
 import yu.ac.bg.rcub.binder.handler.worker.WorkerHandler;
-
-import static java.nio.file.StandardOpenOption.CREATE_NEW;
-import static java.nio.file.StandardOpenOption.WRITE;
-
 
 public class WorkerExternalXML implements WorkerHandler {
 
