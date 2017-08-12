@@ -27,7 +27,6 @@ public class WorkerExternalXML implements WorkerHandler {
 
     private DataInputStream in;
     private DataOutputStream out;
-
     private BufferedReader ProcessInput;
     
     // Direktorijum u kome se drze sve optimizacije, svaka u svom poddirektorijumu
