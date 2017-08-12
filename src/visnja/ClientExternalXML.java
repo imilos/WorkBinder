@@ -35,7 +35,8 @@ public class ClientExternalXML extends Thread {
         	// Cita XML fajl iz komandne linije i pakuje u string
         	xmlInputData = new String(Files.readAllBytes(Paths.get(args[0])));
         } catch (IOException e) {
-        	System.err.println("Fajl " + args[0] + "nije moguce otvoriti.");
+        	System.err.println("***ERROR: Fajl " + args[0] + "nije moguce otvoriti.");
+        	return;
 		}
 
         init("ExternalXML.properties");
@@ -130,3 +131,4 @@ public class ClientExternalXML extends Thread {
         new ClientExternalXML(args).start();
     }
 }
+
