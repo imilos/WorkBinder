@@ -10,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -43,9 +44,8 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 	public static String OPTIMIZATIONS_DIR = "optimizacije";
 	// Naziv izvrsnog fajla
 	public static String EXECUTABLE = "run_exe.sh";
-	// Naziv ulaznog XML fajla
-	public static String XMLINPUT = "input.xml";
 
+	
 	public void run(WorkerConnector workerConnector) {
 
 		workerConnector.log("Started a new EXTERNAL worker handler thread!");
@@ -62,9 +62,6 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 
 			// Worker prima XML
 			String xmlData = BinderUtil.readString(in);
-
-			// Snimi dobijeni string sa XML-om u fajl
-			Files.write(Paths.get(optimizationDirectory + File.separator + XMLINPUT), xmlData.getBytes());
 
 			// EXECUTABLE-u se salje lokacija maticne optimizacije da bi znao gde da smesti
 			// fajlove za statistiku
@@ -83,7 +80,7 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 				workerConnector.log("Started exe");
 
 				// Citanje parametara iz ulaznog XML-a 
-				SolutionForXML inp = GetParametersFromXML(optimizationDirectory + File.separator + XMLINPUT);				
+				SolutionForXML inp = GetParametersFromXML(xmlData);				
 
 				/*
 				 * Slanje niza doublova EXECUTABLE-u preko stdinput-a. Prvo se salje broj
@@ -114,10 +111,13 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 					// Prvo primi broj rezultata koje ce ocitati
 					int duzina = Integer.parseInt(ProcessInput.readLine());
 
+					res.Status = "DONE";
+					res.Message = "OK";
+										
 					// Prima jedan po jedan rezultat
 					for (int i = 0; i < duzina; i++)
 						res.Result.add(Double.parseDouble(ProcessInput.readLine()));
-					
+										
 					// Onda posalji XML spakovan u string					
 					BinderUtil.writeString(out, EvaluationResultToXML(res));
 				} else {
@@ -193,19 +193,19 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 	/**
 	 * Vraca niz parametara iz XMLINPUT-a
 	 * 
-	 * @param
+	 * @param String xmlData
 	 * @return SolutionForXML
 	 * @throws 
 	 */
-	SolutionForXML GetParametersFromXML(String filePath) {
+	SolutionForXML GetParametersFromXML(String xmlData) {
 
 		SolutionForXML inp = new SolutionForXML();
-		
+		StringReader reader = new StringReader(xmlData);
 		try {
-			File file = new File(filePath);
+			
 			JAXBContext jaxbContext = JAXBContext.newInstance(SolutionForXML.class);
 			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-			inp = (SolutionForXML) jaxbUnmarshaller.unmarshal(file);
+			inp = (SolutionForXML) jaxbUnmarshaller.unmarshal(reader);
 			
 			return inp;
 			
