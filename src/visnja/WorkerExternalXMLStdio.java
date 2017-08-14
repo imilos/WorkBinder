@@ -12,9 +12,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -205,6 +202,7 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 			
 			JAXBContext jaxbContext = JAXBContext.newInstance(SolutionForXML.class);
 			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+			//jaxbUnmarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-16");
 			inp = (SolutionForXML) jaxbUnmarshaller.unmarshal(reader);
 			
 			return inp;
@@ -229,7 +227,7 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 		try {
 			JAXBContext jaxbContext = JAXBContext.newInstance(EvaluationResult.class);
 			Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
-			//jaxbMarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-16");
+			jaxbMarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-16");
 			jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 			jaxbMarshaller.marshal(res, xmlOutput);
 			
