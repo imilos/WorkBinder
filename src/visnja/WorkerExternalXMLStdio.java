@@ -63,83 +63,90 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 			// EXECUTABLE-u se salje lokacija maticne optimizacije da bi znao gde da smesti
 			// fajlove za statistiku
 			String commandFullPath = optimizationDirectory + File.separator + EXECUTABLE;
-			String[] commandArray = { commandFullPath, getBinderDir("Worker.properties"), OPTIMIZATIONS_DIR,
-					optimizationUUID };
+			String[] commandArray = { commandFullPath, getBinderDir("Worker.properties"), OPTIMIZATIONS_DIR, optimizationUUID };
 			(new File(commandFullPath)).setExecutable(true);
+			
+			// Citanje parametara iz ulaznog XML-a 
+			ArrayOfSolutionForXML inpTemp = readInputFromXML(xmlData);
+			
+			// Objekat za smestanje rezultata evaluacija
+			ArrayOfEvaluationResult outTemp = new ArrayOfEvaluationResult();
+			
+			for (SolutionForXML inp : inpTemp.solutionsForXML)
+			{
+				// Parametri procesa
+				ProcessBuilder pb = new ProcessBuilder(commandArray);
+				pb.directory(new File(optimizationDirectory));
+				pb.redirectErrorStream(true);
 
-			// Parametri procesa
-			ProcessBuilder pb = new ProcessBuilder(commandArray);
-			pb.directory(new File(optimizationDirectory));
-			pb.redirectErrorStream(true);
+				try {
+					final Process pr = pb.start();
+					workerConnector.log("Started exe");
 
-			try {
-				final Process pr = pb.start();
-				workerConnector.log("Started exe");
-
-				// Citanje parametara iz ulaznog XML-a 
-				SolutionForXML inp = GetParametersFromXML(xmlData);				
-
-				/*
-				 * Slanje niza doublova EXECUTABLE-u preko stdinput-a. Prvo se salje broj
-				 * parametara, a onda jedan po jedan parametar
-				 */
-				ProcessOutput = new BufferedWriter(new OutputStreamWriter(pr.getOutputStream()));
-				ProcessOutput.write(Integer.toString(inp.NumOfPar));
-				ProcessOutput.newLine();
-				
-				for (Double p : inp.Parameters) {
-					ProcessOutput.write(Double.toString(p));
+					/*
+					 * Slanje niza doublova EXECUTABLE-u preko stdinput-a. Prvo se salje broj
+					 * parametara, a onda jedan po jedan parametar
+					 */
+					ProcessOutput = new BufferedWriter(new OutputStreamWriter(pr.getOutputStream()));
+					ProcessOutput.write(Integer.toString(inp.NumOfPar));
 					ProcessOutput.newLine();
+					
+					for (Double p : inp.Parameters) {
+						ProcessOutput.write(Double.toString(p));
+						ProcessOutput.newLine();
+					}
+
+					ProcessOutput.flush();
+					ProcessOutput.close();
+					
+					EvaluationResult res = new EvaluationResult();
+
+					// Preuzimanje izlaza iz EXECUTABLE sa stdout i prosledjivanje klijentu
+					ProcessInput = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+					String s = ProcessInput.readLine();
+					workerConnector.log("Primio sam " + s);
+
+					if (s.equalsIgnoreCase("OK")) {
+
+						// Prvo primi broj rezultata koje ce ocitati
+						int duzina = Integer.parseInt(ProcessInput.readLine());
+
+						res.Status = "DONE";
+						res.Message = "OK";
+											
+						// Prima jedan po jedan rezultat
+						for (int i = 0; i < duzina; i++)
+							res.Result.add(Double.parseDouble(ProcessInput.readLine()));
+						
+						// Dodaj rezultate evaluacije u izlazni objekat
+						outTemp.evaluationResults.add(res);											
+					} else {
+						workerConnector.log("Greska je " + s);
+						BinderUtil.writeString(out, s);
+					}
+
+					ProcessInput.close();
+					// Cekanje da se proces zavrsi
+					pr.waitFor();
+					pr.destroy();
+					
+					workerConnector.log("Finished exe");
+				} catch (IOException e) {
+					workerConnector.log("MojExe nije startovao kako treba>>>> " + e.getMessage());
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
 				}
-
-				ProcessOutput.flush();
-				ProcessOutput.close();
-				
-				EvaluationResult res = new EvaluationResult();
-
-				// Preuzimanje izlaza iz EXECUTABLE sa stdout i prosledjivanje klijentu
-				ProcessInput = new BufferedReader(new InputStreamReader(pr.getInputStream()));
-				String s = ProcessInput.readLine();
-				workerConnector.log("Primio sam " + s);
-
-				if (s.equalsIgnoreCase("OK")) {
-
-					BinderUtil.writeString(out, "OK");
-					// Prvo primi broj rezultata koje ce ocitati
-					int duzina = Integer.parseInt(ProcessInput.readLine());
-
-					res.Status = "DONE";
-					res.Message = "OK";
-										
-					// Prima jedan po jedan rezultat
-					for (int i = 0; i < duzina; i++)
-						res.Result.add(Double.parseDouble(ProcessInput.readLine()));
-										
-					// Onda posalji XML spakovan u string					
-					BinderUtil.writeString(out, EvaluationResultToXML(res));
-				} else {
-					workerConnector.log("Greska je " + s);
-					BinderUtil.writeString(out, s);
-				}
-
-				ProcessInput.close();
-
-				// Cekanje da se proces zavrsi
-				pr.waitFor();
-				pr.destroy();
-				workerConnector.log("Finished exe");
-				BinderUtil.writeString(out, "-finished-");
-
-				in.close();
-				out.close();
-			} catch (IOException e) {
-				workerConnector.log("MojExe nije startovao kako treba>>>> " + e.getMessage());
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
 			}
+			
+			BinderUtil.writeString(out, "OK");
+			// Posalji XML spakovan u string
+			BinderUtil.writeString(out, writeResultsToXML(outTemp));
+			// Zavrsi komunikaciju sa klijentom
+			BinderUtil.writeString(out, "-finished-");
+			
+			in.close();
+			out.close();
 
-		} catch (FileNotFoundException e) {
-			workerConnector.log("ServerDispatcherThread:   *** ERROR *** File not found ", e);
 		} catch (IOException e) {
 			workerConnector.log(
 					"ServerDispatcherThread:   *** ERROR *** IO Error occured while binder communicated with the client!!!",
@@ -151,7 +158,7 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 	}
 
 	
-	// Klasa SolutionXML za ulaz
+	// Klasa SolutionForXML za ulaz
 	@XmlAccessorType(XmlAccessType.FIELD)
 	@XmlRootElement(name = "SolutionForXML")
 	static class SolutionForXML {
@@ -166,6 +173,14 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 		int getNumOfPar() {
 			return this.NumOfPar;
 		}
+	}
+	
+	// Niz SolutionOfXML objekata
+	@XmlAccessorType(XmlAccessType.FIELD)
+	@XmlRootElement(name = "ArrayOfSolutionForXML")
+	static class ArrayOfSolutionForXML {
+		@XmlElement(name = "SolutionForXML")
+		public List<SolutionForXML> solutionsForXML = new ArrayList<>();
 	}
 
 	// Klasa EvaluationResult za izlaz
@@ -186,24 +201,32 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 		@XmlElement(name = "Metadata")
 		public String Metadata = "";
 	}
+	
+	// Niz EvaluationResult-ova za izlaz
+	@XmlAccessorType(XmlAccessType.FIELD)
+	@XmlRootElement(name = "ArrayOfEvaluationResult")
+	static class ArrayOfEvaluationResult {
+		@XmlElement(name = "EvaluationResult")
+		public List<EvaluationResult> evaluationResults = new ArrayList<>();
+	}	
 
 	/**
 	 * Vraca niz parametara iz XMLINPUT-a
 	 * 
 	 * @param String xmlData
-	 * @return SolutionForXML
+	 * @return ArrayOfSolutionForXML
 	 * @throws 
 	 */
-	SolutionForXML GetParametersFromXML(String xmlData) {
+	ArrayOfSolutionForXML readInputFromXML(String xmlData) {
 
-		SolutionForXML inp = new SolutionForXML();
+		ArrayOfSolutionForXML inp = new ArrayOfSolutionForXML();
 		StringReader reader = new StringReader(xmlData);
 		try {
 			
-			JAXBContext jaxbContext = JAXBContext.newInstance(SolutionForXML.class);
+			JAXBContext jaxbContext = JAXBContext.newInstance(ArrayOfSolutionForXML.class);
 			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 			//jaxbUnmarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-16");
-			inp = (SolutionForXML) jaxbUnmarshaller.unmarshal(reader);
+			inp = (ArrayOfSolutionForXML) jaxbUnmarshaller.unmarshal(reader);
 			
 			return inp;
 			
@@ -216,18 +239,18 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 	/**
 	 * Pakuje rezultate u XML format
 	 * 
-	 * @param EvaluationResult
+	 * @param ArrayOfEvaluationResult
 	 * @return List
 	 * @throws 
 	 */
-	String EvaluationResultToXML(EvaluationResult res) {
+	String writeResultsToXML(ArrayOfEvaluationResult res) {
 		
 		StringWriter xmlOutput = new StringWriter();
 
 		try {
-			JAXBContext jaxbContext = JAXBContext.newInstance(EvaluationResult.class);
+			JAXBContext jaxbContext = JAXBContext.newInstance(ArrayOfEvaluationResult.class);
 			Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
-			jaxbMarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-16");
+			//jaxbMarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-16");
 			jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
 			jaxbMarshaller.marshal(res, xmlOutput);
 			
@@ -237,7 +260,6 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 			e.printStackTrace();
 			return null;
 		}
-
 	}
 
 	
@@ -252,9 +274,7 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 	private String getBinderDir(String propFilePath) throws FileNotFoundException, IOException {
 
 		Properties properties = new Properties();
-
 		properties.load(new FileInputStream(new File(propFilePath)));
-
 		return properties.getProperty("BinderDir");
 	}
 

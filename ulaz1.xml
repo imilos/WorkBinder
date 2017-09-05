@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ArrayOfSolutionForXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<SolutionForXML>
+  <NumOfPar>2</NumOfPar>
+  <Parameters>
+    <double>7.626757</double>
+    <double>6.124656</double>
+  </Parameters>
+</SolutionForXML>
+<SolutionForXML>
+  <NumOfPar>2</NumOfPar>
+  <Parameters>
+    <double>8.626757</double>
+    <double>6.124656</double>
+  </Parameters>
+</SolutionForXML>
+</ArrayOfSolutionForXML>
+
