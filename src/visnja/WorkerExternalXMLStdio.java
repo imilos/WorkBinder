@@ -77,21 +77,18 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 			for (ArrayOfSolutionForXML.SolutionForXML inp : inpTemp.solutionsForXML) {
 				
 				workerConnector.log("Started exe");
-				ArrayOfEvaluationResult.EvaluationResult res = new ArrayOfEvaluationResult.EvaluationResult();
 				
-				List<Double> goals = runEvaluation(commandArray, optimizationDirectory, inp.Parameters);
+				// Pokreni evaluaciju
+				ArrayOfEvaluationResult.EvaluationResult res = runEvaluation(commandArray, optimizationDirectory, inp);
 				
-				if (goals != null) {
+				if (res.Status.equalsIgnoreCase("DONE")) {
 				    workerConnector.log("Finished EXE");
-					res.Status = "DONE";
-					res.Message = "OK";
-					res.Result = goals;					
 					// Dodaj rezultate evaluacije u izlazni objekat
 				    outTemp.evaluationResults.add(res);
 				}
 				else {
-					workerConnector.log("Greska u izvrsenju");
-					BinderUtil.writeString(out, "Greska u izvrsenju");
+					workerConnector.log("Greska u izvrsenju!");
+					BinderUtil.writeString(out, res.Message);
 				}
 				
 			}
@@ -121,24 +118,26 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 	 * @param params
 	 * @return 
 	 */
-	private List<Double> runEvaluation(String[] commandArray, String optimizationDirectory, List<Double> params) {
+	private ArrayOfEvaluationResult.EvaluationResult runEvaluation(String[] commandArray, String optimizationDirectory, ArrayOfSolutionForXML.SolutionForXML inp) {
 		// Parametri procesa
 		ProcessBuilder pb = new ProcessBuilder(commandArray);
 		pb.directory(new File(optimizationDirectory));
 		pb.redirectErrorStream(true);
 		
-		// Niz u kome cuvamo ciljeve
-		ArrayList<Double> goals = new ArrayList<>();
+		// Parametri iz ulaza
+		List<Double> params = inp.Parameters;
+		// Izlaz 
+		ArrayOfEvaluationResult.EvaluationResult res = new ArrayOfEvaluationResult.EvaluationResult(); 
 		
 		try {
 			final Process pr = pb.start();
 
 			/*
-			 * Slanje niza doublova EXECUTABLE-u preko stdinput-a. Prvo se salje broj
+			 * Slanje niza doublova EXECUTABLE-u preko stdin-a. Prvo se salje broj
 			 * parametara, a onda jedan po jedan parametar
 			 */
 			ProcessOutput = new BufferedWriter(new OutputStreamWriter(pr.getOutputStream()));
-			ProcessOutput.write(params.size());
+			ProcessOutput.write(Integer.toString(params.size()));
 			ProcessOutput.newLine();
 			
 			for (Double p : params) {
@@ -161,8 +160,15 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 									
 				// Prima jedan po jedan rezultat
 				for (int i = 0; i < duzina; i++)
-					goals.add(Double.parseDouble(ProcessInput.readLine()));
-			} 
+					res.Result.add(Double.parseDouble(ProcessInput.readLine()));
+				
+				res.Status = "DONE";
+				res.Message = "OK";
+			}
+			else {
+				res.Status = "ERROR";
+				res.Message = s;				
+			}
 			
 			ProcessInput.close();
 			pr.waitFor();
@@ -174,11 +180,7 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 			Thread.currentThread().interrupt();
 		} 
 		
-		// Ako je nesto krenulo naopako, vrati null
-		if (goals.size() == 0) 
-			return null;
-
-		return goals;
+		return res;
 	}
 	
 	
