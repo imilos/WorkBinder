@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ArrayOfSolutionForXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <SolutionForXML>
+    <Guid>21601e87-da28-4c49-a481-954608661ee8</Guid>
+    <NumOfPar>2</NumOfPar>
+    <Parameters>
+      <double>1.7875883380887</double>
+      <double>3.71151647775</double>
+    </Parameters>
+  </SolutionForXML>
+</ArrayOfSolutionForXML>
+
