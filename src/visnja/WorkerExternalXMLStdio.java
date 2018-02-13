@@ -70,6 +70,7 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 			
 			// Citanje parametara iz ulaznog XML-a 
 			ArrayOfSolutionForXML inpTemp = ArrayOfSolutionForXML.readInputFromXML(xmlData);
+			//ArrayOfSolutionForXML.SolutionForXML inp = ArrayOfSolutionForXML.readInputFromXMLSingle(xmlData);
 			
 			// Objekat za smestanje rezultata evaluacija
 			ArrayOfEvaluationResult outTemp = new ArrayOfEvaluationResult();
@@ -78,9 +79,10 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 				
 				workerConnector.log("Started exe");
 				
-				// Pokreni evaluaciju
+				// Izvrsi evaluaciju
 				ArrayOfEvaluationResult.EvaluationResult res = runEvaluation(commandArray, optimizationDirectory, inp);
 				
+				// Ispitaj status evaluacije
 				if (res.Status.equalsIgnoreCase("DONE")) {
 				    workerConnector.log("Finished EXE");
 					// Dodaj rezultate evaluacije u izlazni objekat
@@ -94,7 +96,8 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 			}
 			BinderUtil.writeString(out, "OK");
 			// Posalji XML spakovan u string
-			BinderUtil.writeString(out, ArrayOfEvaluationResult.writeResultsToXML(outTemp));			
+			//BinderUtil.writeString(out, ArrayOfEvaluationResult.writeResultsToXMLSingle(res));
+			BinderUtil.writeString(out, ArrayOfEvaluationResult.writeResultsToXML(outTemp));
 			// Zavrsi komunikaciju sa klijentom
 			BinderUtil.writeString(out, "-finished-");
 			
@@ -127,7 +130,10 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 		// Parametri iz ulaza
 		List<Double> params = inp.Parameters;
 		// Izlaz 
-		ArrayOfEvaluationResult.EvaluationResult res = new ArrayOfEvaluationResult.EvaluationResult(); 
+		ArrayOfEvaluationResult.EvaluationResult res = new ArrayOfEvaluationResult.EvaluationResult();
+		
+		// Dodaj GUID u rezultat
+		res.Guid = inp.Guid;
 		
 		try {
 			final Process pr = pb.start();
@@ -143,12 +149,14 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 			for (Double p : params) {
 				ProcessOutput.write(Double.toString(p));
 				ProcessOutput.newLine();
+				// Takodje dodaj varijable u rezultat
+				res.Variables.add(p);
 			}
 
 			ProcessOutput.flush();
 			ProcessOutput.close();
 
-			// Preuzimanje izlaza iz EXECUTABLE sa stdout i prosledjivanje klijentu
+			// Preuzimanje izlaza iz EXECUTABLE sa stdout
 			ProcessInput = new BufferedReader(new InputStreamReader(pr.getInputStream()));
 			String s = ProcessInput.readLine();
 			//workerConnector.log("Primio sam " + s);
@@ -159,7 +167,7 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 				int duzina = Integer.parseInt(ProcessInput.readLine());
 									
 				// Prima jedan po jedan rezultat
-				for (int i = 0; i < duzina; i++)
+				for (int i = 0; i<duzina; i++)
 					res.Result.add(Double.parseDouble(ProcessInput.readLine()));
 				
 				res.Status = "DONE";

@@ -31,12 +31,19 @@ class ArrayOfEvaluationResult {
 		@XmlElement(name = "Message")
 		public String Message;
 
+		@XmlElementWrapper(name = "Variables")
+		@XmlElement(name = "double")
+		public List<Double> Variables = new ArrayList<>();
+				
 		@XmlElementWrapper(name = "Result")
 		@XmlElement(name = "double")
 		public List<Double> Result = new ArrayList<>();
 
 		@XmlElement(name = "Metadata")
 		public String Metadata = "";
+
+		@XmlElement(name = "Guid")
+		public String Guid = "";
 	}
 	
 	/**
@@ -64,4 +71,31 @@ class ArrayOfEvaluationResult {
 			return null;
 		}
 	}	
+
+	/**
+	 * Pakuje rezultate u XML format
+	 * 
+	 * @param ArrayOfEvaluationResult
+	 * @return List
+	 * @throws 
+	 */
+	static String writeResultsToXMLSingle(EvaluationResult res) {
+		
+		StringWriter xmlOutput = new StringWriter();
+
+		try {
+			JAXBContext jaxbContext = JAXBContext.newInstance(EvaluationResult.class);
+			Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+			//jaxbMarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-16");
+			jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+			jaxbMarshaller.marshal(res, xmlOutput);
+			
+			return xmlOutput.toString(); 
+			
+		} catch (JAXBException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}	
+
 }	

@@ -24,6 +24,9 @@ public class ArrayOfSolutionForXML {
 	@XmlRootElement(name = "SolutionForXML")
 	static class SolutionForXML {
 
+		@XmlElement(name = "Guid")
+		public String Guid;
+		
 		@XmlElement(name = "NumOfPar")
 		public int NumOfPar;
 
@@ -61,4 +64,32 @@ public class ArrayOfSolutionForXML {
 			return null;
 		}
 	}
+
+
+	/**
+	 * Vraca niz parametara iz XMLINPUT-a, ali ako je prisutno samo jedno resenje
+	 * 
+	 * @param String xmlData
+	 * @return SolutionForXML
+	 * @throws 
+	 */
+	static SolutionForXML readInputFromXMLSingle(String xmlData) {
+
+		SolutionForXML inp = new SolutionForXML();
+		StringReader reader = new StringReader(xmlData);
+		try {
+			
+			JAXBContext jaxbContext = JAXBContext.newInstance(SolutionForXML.class);
+			Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+			//jaxbUnmarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-16");
+			inp = (SolutionForXML) jaxbUnmarshaller.unmarshal(reader);
+			
+			return inp;
+			
+		} catch (JAXBException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
 }
