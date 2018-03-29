@@ -202,9 +202,16 @@ public class WorkerExternalXMLStdio implements WorkerHandler {
 	 */
 	private String getBinderDir(String propFilePath) throws FileNotFoundException, IOException {
 
-		Properties properties = new Properties();
-		properties.load(new FileInputStream(new File(propFilePath)));
-		return properties.getProperty("BinderDir");
+		File f = new File(propFilePath);
+		
+		if (f.exists() && !f.isDirectory()) { 
+			Properties properties = new Properties();
+			properties.load(new FileInputStream(new File(propFilePath)));
+			
+			return properties.getProperty("BinderDir");
+		}
+		else
+			return System.getProperty("user.dir");
 	}
 
 }
